@@ -20,6 +20,9 @@ package org.apache.struts2.views.velocity.components;
 
 import com.opensymphony.xwork2.inject.Container;
 import com.opensymphony.xwork2.util.ValueStack;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.struts2.ServletActionContext;
 import org.apache.struts2.components.Component;
 import org.apache.struts2.util.ValueStackProvider;
@@ -32,16 +35,24 @@ import org.apache.velocity.exception.MethodInvocationException;
 import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.apache.velocity.runtime.directive.Directive;
+import org.apache.velocity.runtime.parser.node.ASTReference;
+import org.apache.velocity.runtime.parser.node.ASTStringLiteral;
 import org.apache.velocity.runtime.parser.node.Node;
+import org.apache.velocity.runtime.parser.node.SimpleNode;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.Writer;
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.text.MessageFormat.format;
+
 public abstract class AbstractDirective extends Directive {
+
+    private static final Logger LOG = LogManager.getLogger(AbstractDirective.class);
     public String getName() {
         return "s" + getBeanName();
     }
@@ -169,6 +180,14 @@ public abstract class AbstractDirective extends Directive {
      * @throws MethodInvocationException in case of method invocation errors
      */
     protected void putProperty(Map propertyMap, InternalContextAdapter contextAdapter, Node node) throws ParseErrorException, MethodInvocationException {
+        // Start forked modification
+        if (putPropertyWithType(propertyMap, contextAdapter, node)) {
+            return;
+        } else {
+            LOG.debug("Property value type preservation failed, falling back to default string resolution behaviour.");
+        }
+        // End modification
+
         // node.value uses the StrutsValueStack to evaluate the directive's value parameter
         String param = node.value(contextAdapter).toString();
 
@@ -182,5 +201,62 @@ public abstract class AbstractDirective extends Directive {
         } else {
             throw new ParseErrorException("#" + this.getName() + " arguments must include an assignment operator!  For example #tag( Component \"template=mytemplate\" ).  #tag( TextField \"mytemplate\" ) is illegal!");
         }
+    }
+
+    /**
+     * Required for Confluence 8.5 LTS.
+     * Temporary workaround using reflection to preserve type for attributes based on template variables. This preserves
+     * compatibility for bodyTag/param directives that were converted to s-prefixed directives in Confluence.
+     */
+    private boolean putPropertyWithType(Map propertyMap, InternalContextAdapter contextAdapter, Node node) {
+        String param = node.value(contextAdapter).toString();
+        int idx = param.indexOf('=');
+        if (idx == -1 || !(node instanceof ASTStringLiteral)) {
+            return false;
+        }
+        try {
+            String property = param.substring(0, idx);
+            SimpleNode nodeTree = reflectField(node, "nodeTree");
+            if (nodeTree != null && nodeTree.jjtGetNumChildren() == 3 && nodeTree.jjtGetChild(1) instanceof ASTReference &&
+                    StringUtils.isBlank(nodeTree.jjtGetChild(2).literal())) {
+                ASTReference ref = (ASTReference) nodeTree.jjtGetChild(1);
+                Object resolvedVar = ref.value(contextAdapter);
+                if (reflectField(ref, "nullString").equals(resolvedVar)) {
+                    // If resolution failed, set to null
+                    resolvedVar = null;
+                }
+                String firstChild = nodeTree.jjtGetChild(0).literal();
+                char lastChar = firstChild.charAt(firstChild.length() - 1);
+                char secondLastChar = firstChild.charAt(firstChild.length() - 2);
+                if (lastChar == '=') {
+                    // Preserve resolvedVar type
+                    propertyMap.put(property, resolvedVar);
+                    return true;
+                } else if (secondLastChar == '=' && lastChar == '!') {
+                    // If preceded by '!', coerce to boolean and negate
+                    resolvedVar = Boolean.FALSE.equals(resolvedVar);
+                    propertyMap.put(property, resolvedVar);
+                    return true;
+                } else {
+                    LOG.debug(
+                            "Tag attribute type unable to be preserved due to unsupported operand and/or string manipulation : {}",
+                            param);
+                }
+            } else if (nodeTree == null && ("'false'".equalsIgnoreCase(param.substring(idx + 1)) || "false".equalsIgnoreCase(
+                    param.substring(idx + 1)))) {
+                // Replace 'false' string with boolean - this will break scenarios where actual 'false' string is desired
+                propertyMap.put(property, false);
+                return true;
+            }
+        } catch (NoSuchFieldException | IllegalAccessException | ClassCastException e) {
+            LOG.debug(format("Exception preserving tag attribute type : {0}", param), e);
+        }
+        return false;
+    }
+
+    private <T> T reflectField(Object instance, String fieldName) throws NoSuchFieldException, IllegalAccessException, ClassCastException {
+        Field field = instance.getClass().getDeclaredField(fieldName);
+        field.setAccessible(true);
+        return (T) field.get(instance);
     }
 }
