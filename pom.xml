@@ -48,10 +48,10 @@
     -->
 
     <scm>
-        <connection>scm:git:https://gitbox.apache.org/repos/asf/struts.git</connection>
-        <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/struts.git</developerConnection>
-        <url>https://github.com/apache/struts/</url>
-        <tag>STRUTS_6_3_0_1</tag>
+        <connection>scm:git:ssh://git@stash.atlassian.com:7997/bam/struts2-atlassian.git</connection>
+        <developerConnection>scm:git:ssh://git@stash.atlassian.com:7997/bam/struts2-atlassian.git</developerConnection>
+        <url>https://stash.atlassian.com/projects/BAM/repos/struts2-atlassian/browse</url>
+        <tag>HEAD</tag>
     </scm>
 
     <issueManagement>
@@ -73,19 +73,22 @@
     </ciManagement>
 
     <distributionManagement>
-        <site>
-            <id>struts-site</id>
-            <name>Apache Struts</name>
-            <url>https://struts.apache.org/maven/</url>
-        </site>
+<!--        <repository>-->
+<!--            <id>atlassian-restricted</id>-->
+<!--            <url>https://packages.atlassian.com/mvn/maven-restricted</url>-->
+<!--        </repository>-->
+        <repository>
+            <id>atlassian-3rdparty</id>
+            <url>https://packages.atlassian.com/mvn/maven-3rdparty</url>
+        </repository>
     </distributionManagement>
 
     <modules>
-        <module>bom</module>
+<!--        <module>bom</module>-->
         <module>core</module>
         <module>plugins</module>
-        <module>bundles</module>
-        <module>apps</module>
+<!--        <module>bundles</module>-->
+<!--        <module>apps</module>-->
     </modules>
 
     <licenses>
@@ -138,7 +141,7 @@
             <id>includeAssembly</id>
             <activation>
                 <property>
-                    <name>!skipAssembly</name>
+                    <name>includeAssembly</name>
                 </property>
             </activation>
             <modules>
@@ -382,6 +385,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
                 <version>3.0.1</version>
+                <configuration>
+                    <arguments>-Dmaven.test.skip -Dgpg.skip</arguments>
+                </configuration>
             </plugin>
             <plugin>
                 <artifactId>maven-jar-plugin</artifactId>

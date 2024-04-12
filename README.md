@@ -14,6 +14,40 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
+
+# This branch is an Atlassian fork of Apache Struts
+
+# This fork/6.4 branch no longer contains Atlassian modifications and is effectively a pre-release version of Struts 6.5.
+
+## Updating this branch fork with upstream master
+
+1. Clone this repo and checkout this branch
+2. Add upstream repo as a remote: `git remote add apache https://github.com/apache/struts.git`
+3. Fetch the upstream repo: `git fetch --all`
+4. Merge upstream master into this branch, eg. `git merge apache/master`
+
+## Updating this branch fork for a new patch release
+
+1. Clone this repo and checkout this branch
+2. Add upstream repo as a remote: `git remote add apache https://github.com/apache/struts.git`
+3. Fetch the upstream tags: `git fetch --tags apache`
+4. Merge latest patch version tag into this branch, eg. `git merge STRUTS_6_4_1`
+
+## Creating a new branch fork for a new major/minor release
+
+1. Clone this repo and checkout this branch
+2. Add upstream repo as a remote: `git remote add apache https://github.com/apache/struts.git`
+3. Fetch the upstream tags: `git fetch --tags apache`
+4. Checkout a new branch from the desired tag, eg. `git checkout -b fork/6.5 STRUTS_6_5_0`
+5. Merge previous forked branch into new branch, eg. `git merge origin/fork/6.4`
+
+## Releasing a new version
+
+1. Ensure correct snapshot version, eg. `mvn versions:set -DnewVersion=6.4.0-atlassian-1-SNAPSHOT`
+2. Ensure that the `scm` and `distributionManagement` sections in `pom.xml` are consistent with previous releases
+3. Grant yourself Artifactory write permission: `atlas packages permission grant`
+4. Commence release: `mvn -B release:clean release:prepare release:perform`
+
 The Apache Struts web framework
 -------------------------------
 
