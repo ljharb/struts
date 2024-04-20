@@ -18,14 +18,13 @@
  */
 package org.apache.struts2.components;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import com.opensymphony.xwork2.util.ValueStack;
+import org.apache.struts2.util.TextProviderHelper;
 import org.apache.struts2.views.annotations.StrutsTag;
 import org.apache.struts2.views.annotations.StrutsTagAttribute;
-import org.apache.struts2.util.TextProviderHelper;
 
-import com.opensymphony.xwork2.util.ValueStack;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * <!-- START SNIPPET: javadoc -->
@@ -89,7 +88,7 @@ public class Label extends UIBean {
             }
         } else if (name != null) {
             String expr = completeExpression(name);
-            addParameter("nameValue", findString(expr));
+            addParameter("nameValue", legacySyntax ? expr : findString(expr));
         }
     }
 

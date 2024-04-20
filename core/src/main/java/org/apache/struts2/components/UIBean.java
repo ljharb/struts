@@ -1021,7 +1021,7 @@ public abstract class UIBean extends Component {
         String generatedId;
         if (id != null) {
             // this check is needed for backwards compatibility with 2.1.x
-            tryId = findString(id);
+            tryId = legacySyntax ? id : findString(id);
         } else if (null == (generatedId = escape(name != null ? findString(name) : null))) {
             LOG.debug("Cannot determine id attribute for [{}], consider defining id, name or key attribute!", this);
             tryId = null;

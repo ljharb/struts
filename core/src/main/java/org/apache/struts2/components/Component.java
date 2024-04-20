@@ -68,6 +68,7 @@ public class Component {
      */
     protected static ConcurrentMap<Class<?>, Collection<String>> standardAttributesMap = new ConcurrentHashMap<>();
 
+    protected boolean legacySyntax;
     protected boolean devMode = false;
     protected boolean escapeHtmlBody = false;
     protected ValueStack stack;
@@ -101,6 +102,12 @@ public class Component {
         int dot = name.lastIndexOf('.');
 
         return name.substring(dot + 1).toLowerCase();
+    }
+
+    // Required for Confluence 8.5 LTS
+    @Inject(value = "struts.tag.altSyntax", required = false)
+    public void setLegacySyntax(String legacySyntax) {
+        this.legacySyntax = !BooleanUtils.toBoolean(legacySyntax);
     }
 
     @Inject(value = StrutsConstants.STRUTS_DEVMODE, required = false)
@@ -319,6 +326,9 @@ public class Component {
      * @return the modified expression wrapped with %{...}
      */
     protected String completeExpression(String expr) {
+        if (legacySyntax) {
+            return expr;
+        }
         if (expr == null) {
             return null;
         }
@@ -378,15 +388,13 @@ public class Component {
      * @return the Object found, or <tt>null</tt> if not found.
      */
     protected Object findValue(String expression, Class<?> toType) {
-        if (toType == String.class) {
-            if (ComponentUtils.containsExpression(expression)) {
-                return TextParseUtil.translateVariables('%', expression, stack);
-            } else {
-                return expression;
-            }
+        if (legacySyntax || toType != String.class) {
+            return getStack().findValue(stripExpression(expression), toType, throwExceptionOnELFailure);
+        }
+        if (ComponentUtils.containsExpression(expression)) {
+            return TextParseUtil.translateVariables('%', expression, stack);
         } else {
-            String strippedExpression = stripExpression(expression);
-            return getStack().findValue(strippedExpression, toType, throwExceptionOnELFailure);
+            return expression;
         }
     }
 

@@ -186,7 +186,7 @@ public abstract class DoubleListUIBean extends ListUIBean {
 
         Form form = (Form) findAncestor(Form.class);
         if (doubleId != null) {
-            addParameter("doubleId", findString(doubleId));
+            addParameter("doubleId", legacySyntax ? doubleId : findString(doubleId));
         } else if (form != null) {
             addParameter("doubleId", form.getParameters().get("id") + "_" + escape(doubleName != null ? findString(doubleName) : null));
         } else {
