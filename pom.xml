@@ -29,7 +29,7 @@
 
     <modelVersion>4.0.0</modelVersion>
     <artifactId>struts2-parent</artifactId>
-    <version>6.4.0-atlassian-1-SNAPSHOT</version>
+    <version>6.4.0-atlassian-1-m02-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Struts 2</name>
     <url>https://struts.apache.org/</url>
@@ -73,14 +73,14 @@
     </ciManagement>
 
     <distributionManagement>
-<!--        <repository>-->
-<!--            <id>atlassian-restricted</id>-->
-<!--            <url>https://packages.atlassian.com/mvn/maven-restricted</url>-->
-<!--        </repository>-->
         <repository>
-            <id>atlassian-3rdparty</id>
-            <url>https://packages.atlassian.com/mvn/maven-3rdparty</url>
+            <id>atlassian-restricted</id>
+            <url>https://packages.atlassian.com/mvn/maven-restricted</url>
         </repository>
+<!--        <repository>-->
+<!--            <id>atlassian-3rdparty</id>-->
+<!--            <url>https://packages.atlassian.com/mvn/maven-3rdparty</url>-->
+<!--        </repository>-->
     </distributionManagement>
 
     <modules>
