@@ -18,8 +18,6 @@
  */
 package com.opensymphony.xwork2;
 
-import org.apache.struts2.interceptor.parameter.StrutsParameter;
-
 /**
  * ModelDriven Actions provide a model object to be pushed onto the ValueStack
  * in addition to the Action itself, allowing a FormBean type approach like Struts.
@@ -33,7 +31,6 @@ public interface ModelDriven<T> {
      *
      * @return the model
      */
-    @StrutsParameter
     T getModel();
 
 }
