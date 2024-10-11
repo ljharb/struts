@@ -20,6 +20,7 @@ package org.apache.struts2.interceptor.parameter;
 
 import com.opensymphony.xwork2.ActionContext;
 import com.opensymphony.xwork2.ActionInvocation;
+import com.opensymphony.xwork2.ModelDriven;
 import com.opensymphony.xwork2.inject.Inject;
 import com.opensymphony.xwork2.interceptor.MethodFilterInterceptor;
 import com.opensymphony.xwork2.security.AcceptedPatternsChecker;
@@ -348,6 +349,11 @@ public class ParametersInterceptor extends MethodFilterInterceptor {
         }
 
         long paramDepth = name.codePoints().mapToObj(c -> (char) c).filter(NESTING_CHARS::contains).count();
+
+        if (action instanceof ModelDriven<?> && !ActionContext.getContext().getValueStack().peek().equals(action)) {
+            return hasValidAnnotatedMember("model", action, paramDepth + 1);
+        }
+
         if (requireAnnotationsTransitionMode && paramDepth == 0) {
             return true;
         }
@@ -401,7 +407,7 @@ public class ParametersInterceptor extends MethodFilterInterceptor {
             return false;
         }
         if (paramDepth >= 1) {
-            allowlistClass(relevantMethod.getReturnType());
+            allowlistClass(propDesc.getPropertyType());
         }
         if (paramDepth >= 2) {
             allowlistReturnTypeIfParameterized(relevantMethod);
