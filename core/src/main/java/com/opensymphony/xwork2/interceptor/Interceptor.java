@@ -34,4 +34,35 @@ public interface Interceptor extends org.apache.struts2.interceptor.Interceptor 
     }
 
     String intercept(ActionInvocation invocation) throws Exception;
+
+    static Interceptor adapt(org.apache.struts2.interceptor.Interceptor actualInterceptor) {
+        if (actualInterceptor instanceof ActionInvocation) {
+            return (Interceptor) actualInterceptor;
+        }
+        return actualInterceptor != null ? new LegacyAdapter(actualInterceptor) : null;
+    }
+
+    class LegacyAdapter implements Interceptor {
+
+        private final org.apache.struts2.interceptor.Interceptor adaptee;
+
+        private LegacyAdapter(org.apache.struts2.interceptor.Interceptor adaptee) {
+            this.adaptee = adaptee;
+        }
+
+        @Override
+        public String intercept(ActionInvocation invocation) throws Exception {
+            return adaptee.intercept(invocation);
+        }
+
+        @Override
+        public void destroy() {
+            adaptee.destroy();
+        }
+
+        @Override
+        public void init() {
+            adaptee.init();
+        }
+    }
 }
